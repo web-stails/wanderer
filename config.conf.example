@@ -1,0 +1,64 @@
+#протокол базы данных pg - postgressql; mysql - mysql
+db.client: mysql
+# адрес нахождения базы данных
+db.connection.host: localhost
+# пользователь
+db.connection.user: user_db
+# пароль
+db.connection.password: password_db
+# база данных
+db.connection.database: database_db
+
+# управление таблицами: all - всеми; only - только своими (если имена таблиц не пересекаются)
+option.wanderer_mode: all
+# наименование связующиех полей
+# id_name_table = id_{имя таблицы связки}_table[_{пост префикс не обезательный}]
+# name_id = {имя таблицы связки}_id[_{пост префикс не обезательный}]
+option.binding_fields: id_name_table
+
+# поле первичного ключа в таблицах
+option.primary_field: id
+# таблицы в которых данное поле не нужно, нужно указать это поле как false
+#
+# mytable: {
+#   id: false,
+#   {other_field}: {params field}
+# }
+#
+
+# поле мягкого удаления
+# {false|{name_field}}
+#option.field_deleted_at: deleted_at
+# таблицы в которых данное поле не нужно, нужно указать это поле как false
+# mytable: {
+#   deleted_at: false,
+#   {other_field}: {params field}
+# }
+#тип поле мягкого удаления
+# {int|datetime|int_index|datetime_index}
+option.param_field_deleted_at.type: timestamp
+option.param_field_deleted_at.null: true
+
+
+
+#поле время создания записи
+# {false|{name_field}}
+option.field_created: created_at
+# таблицы в которых данное поле не нужно, нужно указать это поле как false
+#тип поле врем создания записи
+# {int|datetime|int_index|datetime_index}
+option.param_field_created.type: timestamp
+option.param_field_created.default: new
+#option.param_field_created.null: true
+
+
+#поле последнего редактирования записи
+# {false|{name_field}}
+option.field_update: updated_at
+# таблицы в которых данное поле не нужно, нужно указать это поле как false
+#тип поле последнего редактирования записи
+# {int|datetime|int_index|datetime_index}
+option.param_field_update.type: timestamp
+#option.param_field_update.default: new
+option.param_field_update.null: true
+

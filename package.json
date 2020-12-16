@@ -1,0 +1,17 @@
+{
+  "name": "wanderer",
+  "version": "1.0.0",
+  "description": "system structurize db",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "web.stails",
+  "license": "ISC",
+  "dependencies": {
+    "knex": "^0.21.0",
+    "md5-nodejs": "^1.0.3",
+    "mysql": "^2.18.1",
+    "pg": "^8.0.3"
+  }
+}
