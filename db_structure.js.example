@@ -1,168 +1,35 @@
-/***
- *  ---- СТРАННИК ----
- *  ---- ИНСТРУКЦИЯ ---
- *
- *  система СТРАННИК это система призвана заменить миграции, упростить процес разработки проектов
- *
- *  СТРАННИК является системой контроля структуры базы данных.
- *
- *  Объект tables содержит список таблиц которые должны быть в базе (системные таблицы)
- *
- *  Ключи первого уровня это имена таблиц.
- *      Правила написания имен таблиц:
- *      1) Все имена пишутся исключительно в нижнем регистре
- *      2) В качестве разделителя использовать символ "_" (нижнее тере)
- *  Ключи второго уровня это имена полей:
- *      1) Базовые правила соответетствую правилам базы данных
- *          правила наименования полей:
- *      2) первичный ключ "id" не указывается в шаблоне он добавится автоматически
- *          если нужно исключить поле "id" из таблицы то укажте id: false,
- *          если нужно изменить параметры поля "id" то просто укажите его как и обычное поле
- *              id: {
- *                  type: int,
- *                  default: 0,
- *                  primary_key: true,
- *                  auto_increment: true
- *              }
- *          незабудьте указать что это первичный ключ primary_key: true
- *
- *      3) если поле является связующим  то имя поля должно быть следующего вида:
- *           id_{имя связующей таблицы без префикса "table_"}_table если установлен режим option.binding_fields: id_name_table
-             или {имя связующей таблицы без префикса "table_"}_id если установлен режим option.binding_fields: name_id
- *      4) если в одной таблице требуется несколько связующих полей к одной итойже таблице
- *          то после пост-префикса ..._table или _id имени поля можно добавить любой дополнительный пост-превикс через символ "_"
- *          пример в режиме option.binding_fields: id_name_table :{
- *              id_users_table_create: 'id', // поля для связи с пользователями - кто создал запись в тукущей табице
- *              id_users_table_last_update: 'id' // поля для связи с пользователями - кто сделал посделнюю правку
- *              id_users_table_del: 'id' // поля для связи с пользователями - кто произвел мягкое удаление
- *          }
-            пример в режиме option.binding_fields: name_id :{
-  *              users_id_create: 'id', // поля для связи с пользователями - кто создал запись в тукущей табице
-  *              users_id_last_update: 'id' // поля для связи с пользователями - кто сделал посделнюю правку
-  *              users_id_del: 'id' // поля для связи с пользователями - кто произвел мягкое удаление
-  *          }
- *  параметры полей могут указываться в нескольких форматах
- *      1) Полный (ввиде объекта параметров)
- *          type: '{тип поля в базе данных}' список типов будет указан ниже
- *          constraint: {размер поля} запвисит от типы может быть не обезательным
- *          default: {значение по умолчанию} если не указать то выставится автоматически: для числовых - 0; для тесктовых - ''; json - {}; ...
- *          index: true - если нужно индексировать поле
- *
- *          param: {...} параметры доп системы странника используются для конструктора отображения и конструктора полей в создоваемой системе
- *
- *      2) Сокращенный в виде строки
- *          {тип поля}[({размер поля})][_index`если нужно интексировать поле`]
- *          пример:
- *              {название поля в бд}: 'int_index', // поле integer(11) default 0 // c добавлением индекса по данному полю в таблице (имена индексов автоматически)
- *              {название поля в бд}: 'int(9)', // integer(9) default 0
- *              {название поля в бд}: 'varchar', // varchar(255) default '';
- *              {название поля в бд}: 'varchar(40)_index', //varchar(40) default ''; // c добавлением индекса по данному полю в таблице (имена индексов автоматически)
- *              {название поля в бд}: 'varchar(63)', // varchar(63) default '';
- *              {название поля в бд}: 'text', // text nullable; на поле типа text индек лучше не ставить
- *      3) Смешанный - массив из 2 параметров. Первый - это строка как во втором варианте а второй это объект "param" как в первом варианте
- *          пример:
- *              {название поля в бд}: ['int_index', {
- *                  type: 'number',
- *                  label: 'Проценты',
- *                  top_params: {
- *                      min: 0,
- *                      step: 1
- *                      max: 100,
- *                      default: 50,
- *                      placeholder: 'Проценты'
- *                  }
- *              }], ...
- *              в базе данных будет создано поле integer (11) default 0; и проиндексированно
- *              в конструкторе полей системы будет поле <input type="number"
- *
- *
- * параметры:
- *
- *
- * для того чтобы произвести любые изменения в базе данных просто исправте шаблон и сохраните
- * если странник работает в автоматическом режиме он тутже применит изменения
- * если в ручном то нужно будет запустить структуризацию
- *
- * отрицательная строна СТРАННИКА:
- *  минусом странника является невозможность переименовать созданную таблицу или поля
- *  (при переименовании поля или таблицы - старая таблица будет удалена и созданна новая без данных тоже и сменапи полей)
- *  этот минус присутствует по крайней мере на текущей версии реализации странника, но по опыту работы могу сказать что это ненужно
- *  коррекция имен нужна только на начальном этапе разработки функционала,когда в разрабатываемомо функционале еще нету критически важных данных
- *
- *
- *
- * type: increments, //(not to write: constraint and index)
- *            bigIncrements, //(not to write: constraint and index)
- *            int,
- *            big_int, //(not to write: constraint)
- *            text, //(not to write: constraint and index)
- *            longtext, //(not to write: constraint and index)
- *            varchar,
- *            float, //(not to write: constraint)
- *            decimal, //(not to write: constraint)
- *            bool, //(not to write: constraint)
- *            binary, //(not to write: constraint)
- *           'id' == 'int_index' // the field type is specified for linking fields
-
-
-
-   top_parametrs - type:
-        text,
-        tel,
-        password,
-        textarea,
-        date,
-        date_sql,
-        number,
-        double,
-        color,
-        time,
-        email,
-        select,
-        checkbox,
-        edit,
-        elements
-
-    view - отображение в списке/ default - false
-    edit - отображение при заполнении/ default -true
-    auto_save - быстрое редактирование в списке/ default false
-    select_list - отображение в списке связи / default false
-
-    require: true - валидация при заполении| обезательно для заполнения
-    unique: true - валидация при заполении| уникальное
-    pattern: 'reg' - валидация при заполении| проверка заполнения по регулярному выражению
- */
-let md5 = require('md5-nodejs');
-global.password_hash = pass => md5(pass + 'losals_systems')
+/* -- example of filling in data, the example is taken from a real project -- */
+/* -- to understand what and why, read the instructions. --*/
+/* -- parameters of "param" structures are arbitrary and are processed in the interior of the application -- */
 const
     tables = {
         users: {
             login: ['varchar_index', {
                 type: 'text',
-                label: 'Логин',
-                placeholder: 'Логин пользователя',
+                label: 'Login',
+                placeholder: 'User login',
                 view: true,
-                unique: true,
+                unique: true,ы
                 require: true,
                 top_params: {
-                    valid: { // валидационные параметры
+                    valid: { // validation parameters
                         min_length: 5,
 	                    max_length: 255,
                         unique: true,
                         require: true,
-                        only_latin: true // только в латинице
+                        only_latin: true // only in Latin
                     }
                 }
             }],
             password: ['varchar_index', {
                 type: 'password',
-                label: 'Пароль',
-                placeholder: 'Для имнения пароля укажите новый',
+                label: 'Password',
+                placeholder: 'To change your password, enter a new one',
                 top_params: {
-	                save_only: true, // сохранять только при переданном значении
-                    add_require: true, // при создании новой записи поле обезательно
-                    function_save: 'password_hash({data})', // перед сохранение прогнать через функцию
-                    valid: { // валидационные параметры
+	                save_only: true, // save only when the value is passed
+                    add_require: true, // when creating a new record, this field is required
+                    function_save: 'password_hash({data})', // before saving to drive through a function
+                    valid: { // validation parameters
                         min_length: 8,
 	                    max_length: 255,
                     }
@@ -180,7 +47,7 @@ const
                         min_length: 2,
 	                    max_length: 255,
                         require: true,
-                        only_cyrillic: true // только в кирилица
+                        only_cyrillic: true // only in Cyrillic
                     }
                 }
             }],
@@ -195,7 +62,7 @@ const
                         min_length: 2,
 	                    max_length: 255,
                         require: true,
-                        only_cyrillic: true // только в кирилица
+                        only_cyrillic: true // only in Cyrillic
                     }
                 }
             }],
@@ -208,22 +75,22 @@ const
                     valid: {
                         min_length: 2,
 	                    max_length: 255,
-                        only_cyrillic: true // только в кирилица
+                        only_cyrillic: true // only in Cyrillic
                     }
                 }
             }],
             phone: ['string(12)', {
                 type: 'tel',
-                label: 'Телефон',
+                label: 'Telephone',
                 require: true,
                 placeholder: '8 (###) ###-##-##',
                 default: '80000000000',
                 view: true,
                 require: true,
                 top_params: {
-                    mask: '8 (999) 999-99-99', // маска при заполнении
-                    function_view: 'phone_format({data})', // функция отображения
-                    function_save: 'phone_strip({data})', // перед сохранение прогнать через функцию
+                    mask: '8 (999) 999-99-99', // mask when filling in
+                    function_view: 'phone_format({data})', // display function
+                    function_save: 'phone_strip({data})', // before saving run through the function
                     valid: {
                         min_length: 10,
                         require: true,
@@ -255,7 +122,7 @@ const
                 type: 'varchar',
                 param: {
                     type: 'text',
-                    label: 'Роль пользователей',
+                    label: 'role user',
                     view: true,
                     select_list: true
                 }
@@ -265,28 +132,28 @@ const
                 default: false,
                 param: {
                     type: 'checkbox',
-                    label: 'Участвет в сетке расписания',
+                    label: 'Participates in the schedule grid',
                     default: true,
                     view: true
                 }
             },
             active: ['bool', {
                 type: 'checkbox',
-                label: 'Активность'
+                label: 'Activity'
             }]
         }
         ,key_access: {
             title: ['varchar', {
                 type: 'text',
-                label: 'Ключ доступа',
-                placeholder: 'Ключ в талинице',
+                label: 'Access key',
+                placeholder: 'Key in the table',
                 view: true,
                 edit: false
             }],
             description: ['varchar', {
                 type: 'textarea',
-                label: 'Описание',
-                placeholder: 'Для чего создан данный ключ',
+                label: 'Description',
+                placeholder: 'Why this key was created',
                 view: true
             }]
         }
@@ -332,11 +199,11 @@ const
             id_projects_licenses_table: 'id',
             licenses: 'varchar(40)_index',
             key: 'varchar',
-            identifier_device: 'varchar' // идентификатор устройства у которому привязанна лицензия
+            identifier_device: 'varchar' // id of the device that the license is linked to
         }
     },
 
-    data = { // автоматическое базовое заполнение
+    data = { // automatic basic filling
         option: [
             {
                 search: {
@@ -362,7 +229,7 @@ const
                     title: 'view'
                 },
                 data: {
-                    description: 'Просмотр'
+                    description: 'View'
                 }
             },
             {
@@ -370,7 +237,7 @@ const
                     title: 'edit'
                 },
                 data: {
-                    description: 'Изменение'
+                    description: 'Edit'
                 }
             },
             {
@@ -378,7 +245,7 @@ const
                     title: 'add'
                 },
                 data: {
-                    description: 'Создание'
+                    description: 'Create'
                 }
             },
             {
@@ -386,14 +253,14 @@ const
                     title: 'del'
                 },
                 data: {
-                    description: 'Удаление'
+                    description: 'Delete'
                 }
             }
         ],
         role: [
             {
                 search: {
-                    title: 'Администратор'
+                    title: 'Admin'
                 },
                 data: {
                     active: true
@@ -406,11 +273,12 @@ const
                     login: 'admin',
                 },
                 data: {
-                    password: password_hash('password qwerty'),
+                    password: password_hash('password qwerty'), // you need to place this function in the current file
+                                                                   so that the logic matches the password encryption in the application
                     first_name: 'Админ',
                     last_name: 'Админ',
-                    // если поле это id_(название таблицы без префикса)_table: {а значение это объект} // то в поле мы записываем -
-                    id_role_table: {title: 'Администратор'}, // id из таблицы по объекту поиска
+                    // if the field is id_(table name without prefix)_table: {and the value is an object} // then in the field we write -
+                    id_role_table: {title: 'Admin'}, // id from the table by search object
                     active: true
                 }
             }
@@ -432,21 +300,21 @@ const
         menu_vs_role_access: [
             {
                 search: {
-                    id_role_table: {title: 'Администратор'},
+                    id_role_table: {title: 'Admin'},
                     id_menu_table: {uri: 'admin/menu'},
                     id_key_access_table: {title: 'view'}
                 }
             },
             {
                 search: {
-                    id_role_table: {title: 'Администратор'},
+                    id_role_table: {title: 'Admin'},
                     id_menu_table: {uri: 'admin/menu'},
                     id_key_access_table: {title: 'edit'}
                 }
             },
             {
                 search: {
-                    id_role_table: {title: 'Администратор'},
+                    id_role_table: {title: 'Admin'},
                     id_menu_table: {uri: 'admin/menu'},
                     id_key_access_table: {title: 'add'}
                 }

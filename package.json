@@ -9,9 +9,10 @@
   "author": "web.stails",
   "license": "ISC",
   "dependencies": {
-    "knex": "^0.21.0",
+    "knex": "^0.21.1",
     "md5-nodejs": "^1.0.3",
+    "moment": "^2.29.1",
     "mysql": "^2.18.1",
-    "pg": "^8.0.3"
+    "pg": "^8.2.1"
   }
 }

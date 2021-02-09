@@ -1,64 +1,99 @@
-#протокол базы данных pg - postgressql; mysql - mysql
+# - протокол базы данных pg - postgressql; mysql - mysql
+# - протокол базы данных PG - PostgresSQL; mysql - mysql
 db.client: mysql
-# адрес нахождения базы данных
+# - адрес нахождения базы данных
+# - address of the database location
 db.connection.host: localhost
-# пользователь
-db.connection.user: user_db
-# пароль
-db.connection.password: password_db
-# база данных
-db.connection.database: database_db
+# - пользователь
+# - user
+db.connection.user: mysql
+# - пароль
+# - password
+db.connection.password: mysql
+# - база данных
+# - database
+db.connection.database: wanderer
 
-# управление таблицами: all - всеми; only - только своими (если имена таблиц не пересекаются)
-option.wanderer_mode: all
-# наименование связующиех полей
-# id_name_table = id_{имя таблицы связки}_table[_{пост префикс не обезательный}]
-# name_id = {имя таблицы связки}_id[_{пост префикс не обезательный}]
-option.binding_fields: id_name_table
+# - управление таблицами: all - всеми; only - только своими (если имена таблиц не пересекаются)
+# - managing tables: all - all; only - only your own (if the table names do not overlap)
+option.wanderer_mode: only
+# - наименование связующиех полей
+# - the name of the binding fields
+# - id_name_table = id_{имя таблицы связки}_table[_{пост префикс не обезательный}]
+# - id_name_table = id_{bundle table name}_table[_{post prefix optional}]
+# - name_id = {имя таблицы связки}_id[_{пост префикс не обезательный}]
+# - name_id = {bundle table name}_id[_{post prefix optional}]
+option.binding_fields: name_id
 
-# поле первичного ключа в таблицах
+# - управление массивами fillable, dates; и библиотекой use soft delete в моделях
+# - managing fillable, dates arrays; and the use soft delete library in models
+option.correct_laravel_model: true
+
+# - поле первичного ключа в таблицах
+# - the primary key field in the tables
 option.primary_field: id
-# таблицы в которых данное поле не нужно, нужно указать это поле как false
-#
-# mytable: {
-#   id: false,
-#   {other_field}: {params field}
-# }
-#
+# - таблицы в которых данное поле не нужно, нужно указать это поле как false
+# - tables in which this field is not needed, you must specify this field as false
+# -
+# - mytable: {
+# -  id: false,
+# -  {other_field}: {params field}
+# - }
+# -
 
-# поле мягкого удаления
-# {false|{name_field}}
-#option.field_deleted_at: deleted_at
-# таблицы в которых данное поле не нужно, нужно указать это поле как false
-# mytable: {
-#   deleted_at: false,
-#   {other_field}: {params field}
-# }
-#тип поле мягкого удаления
-# {int|datetime|int_index|datetime_index}
+# - поле мягкого удаления
+# - soft delete field
+# - {false|{name_field}}
+option.field_deleted_at: deleted_at
+# - таблицы в которых данное поле не нужно, нужно указать это поле как false
+# - tables in which this field is not needed, you must specify this field as false
+# - mytable: {
+# -  deleted_at: false,
+# -  {other_field}: {params field}
+# - }
+
+# - тип поле мягкого удаления
+# - the type field of soft deletion
+# - {int|datetime|int_index|datetime_index|timestamp}
 option.param_field_deleted_at.type: timestamp
+# - разрешение на null значение у данного поля
+# - permission to null the value of this field
 option.param_field_deleted_at.null: true
 
 
 
-#поле время создания записи
-# {false|{name_field}}
+# - поле время создания записи
+# - record creation time field
+# - {false|{name_field}}
 option.field_created: created_at
-# таблицы в которых данное поле не нужно, нужно указать это поле как false
-#тип поле врем создания записи
-# {int|datetime|int_index|datetime_index}
+# - таблицы в которых данное поле не нужно, нужно указать это поле как false
+# - tables in which this field is not needed, you must specify this field as false
+# - тип поле время создания записи
+# - the type field is record creation time
+# - {int|datetime|int_index|datetime_index|timestamp}
 option.param_field_created.type: timestamp
+# - значение по умолчанию: {value} | new - функция ДБ текущего времени
+# - default value: {value} | new - DB function of the current time
 option.param_field_created.default: new
+# - разрешение на null значение у данного поля
+# - permission to null the value of this field
 #option.param_field_created.null: true
 
 
-#поле последнего редактирования записи
-# {false|{name_field}}
+# - поле последнего редактирования записи
+# - field of the last edit of the record
+# - {false|{name_field}}
 option.field_update: updated_at
-# таблицы в которых данное поле не нужно, нужно указать это поле как false
-#тип поле последнего редактирования записи
-# {int|datetime|int_index|datetime_index}
+# - таблицы в которых данное поле не нужно, нужно указать это поле как false
+# - tables in which this field is not needed, you must specify this field as false
+# - тип поле последнего редактирования записи
+# - type field of the last edit of the record
+# - {int|datetime|int_index|datetime_index|timestamp}
 option.param_field_update.type: timestamp
+# - значение по умолчанию: {value} | new - функция ДБ текущего времени
+# - default value: {value} | new - DB function of the current time
 #option.param_field_update.default: new
+# - разрешение на null значение у данного поля
+# - permission to null the value of this field
 option.param_field_update.null: true
 
