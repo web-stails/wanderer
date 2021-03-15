@@ -49,7 +49,7 @@ module.exports = {
 
 					if(typeof tp_pr === 'string' && tp_pr === 'id') {
 						tables[name_table][name_field] = {
-							type: 'big_int',
+							type: 'int',
 							default: 0,
 							index: true,
 							unsigned: true,
