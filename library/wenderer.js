@@ -144,7 +144,41 @@ module.exports = new class database_structuring extends require('../models/app_m
 
 		// перенос дефолтных полей в основной список если они помечены как игнорируемые
 		await forIn(tables, async table => {
-			// console.log('table =>', table);
+
+			// если нету опций в таблице создаем их
+			if(typeof table._option == 'undefined') {
+				table._option = {
+					model:{
+						SoftDelete: true, // управление подключением класса SoftDelete - default: true
+						table: true, // управление переменной $table - default: true
+						fillable: true, //управление массивом $fillable - default: true
+						dates: true, // управление массивом $dates - default: true
+						timestamp: true // управление строчкой public $timestamps = false; - default: true
+					},
+					default_vars: { // автоматическое добавление дефолтных полей
+						id: true, // - default: true
+						deleted_at: true, // - default: true
+						created_at: true, // - default: true
+						update_at: true // - default: true
+					}
+				};
+			}
+
+			if(typeof table.created_at != 'undefined' && table.created_at === false) {
+				table._option.default_vars.created_at = false;
+			}
+			if(typeof table.id != 'undefined' && table.id === false) {
+				table._option.default_vars.id = false;
+			}
+			if(typeof table.update_at != 'undefined' && table.update_at === false) {
+				table._option.default_vars.update_at = false;
+			}
+			if(typeof table.deleted_at != 'undefined' && table.deleted_at === false) {
+				table._option.default_vars.deleted_at = false;
+				table._option.model.SoftDelete = false;
+			}
+
+
 			if(typeof table._option != 'undefined' && typeof table._option.default_vars != 'undefined') {
 				await forIn(table._option.default_vars, (val, field) => {
 					if(val == false) {
@@ -156,6 +190,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 
 		// преобразуем сокращеные параметры полей в полные
 		await convert_sf_data.convert_files(tables);
+
+		// console.log('tables _ 1 =>', tables);
 
 		// коррекция масствов fillable в моделях
 		await correct_models.correct_fillable(tables);
@@ -625,6 +661,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 		// получаем массив выше стоящих параметров
 		external_parameter_tables = await this.woks_tables(tables, index_tables_db, tables_db);
 
+		// console.log('er =>', tables);
 		// работаем с полями таблиц в таблице полей таблиц (сори за формулировку)
 		await asyncForeach(tables, (async function(fields, table) { // перебор по таблицам
 
@@ -657,6 +694,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 					type: 'system',
 					active: true
 				};
+
+				// console.log('tv_data =>', tv_data);
 
 				await this.table('table_tables')
 				.then(() => {
