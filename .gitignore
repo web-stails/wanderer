@@ -6,3 +6,5 @@ db_structure.js
 idea*
 node_modules/*
 package-lock.json
+app
+app/*
