@@ -45,6 +45,47 @@ module.exports = {
 					}
 
 
+					if(typeof tp_pr === 'string' && tp_pr === 'active_param') {
+						tables[name_table][name_field] = {
+							type: 'bool',
+							constraint: 1,
+							default: 1,
+							param: {
+								type: 'checkbox',
+								label: 'Активность',
+								default: 1,
+								...data_param
+							}
+						}
+					}
+
+					let tinyint = /^unsigned_tinyint\((\d+)\)(_index)?$/;
+					if(typeof tp_pr === 'string' && tinyint.test(tp_pr)) {
+						let param_constraint = tp_pr.match(tinyint);
+
+						tables[name_table][name_field] = {
+							type: 'tinyint',
+							constraint: parseInt(param_constraint[1]),
+							index: isset(param_constraint[2]),
+							param: data_param
+						}
+					}
+
+					let unsigned_tinyint = /^unsigned_tinyint\((\d+)\)(_index)?$/;
+					if(typeof tp_pr === 'string' && unsigned_tinyint.test(tp_pr)) {
+						let param_constraint = tp_pr.match(unsigned_tinyint);
+
+						tables[name_table][name_field] = {
+							type: 'tinyint',
+							unsigned: true,
+							constraint: parseInt(param_constraint[1]),
+							index: isset(param_constraint[2]),
+							param: data_param
+						}
+					}
+
+
+
 					/* id */
 
 					if(typeof tp_pr === 'string' && tp_pr === 'id') {
