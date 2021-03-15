@@ -23,17 +23,16 @@ module.exports = {
 	},
 
 	async parse_strings_model(fileContent, table_name, fields) {
-
+		// разделяем файл модели на строки
 		let file_s = fileContent.split("\n");
-
-		// console.log('file_s =>', file_s);
-		// console.log('fields =>', fields);
 
 		let SoftDelete_field = false;
 		if(typeof fields.deleted_at == 'undefined' || fields.deleted_at !== false) {
-			SoftDelete_field = true;
+			// при условии что в параметрах таблицы не сказанно игнорировать SoftDelete
+			if(typeof fields._option.model.SoftDelete == 'undefined'  || fields._option.model.SoftDelete != false) {
+				SoftDelete_field = true;
+			}
 		}
-
 
 		// обязательные параметры модели
 		let is_not_param = {
@@ -44,9 +43,15 @@ module.exports = {
 
 		// SoftDeletes параметры
 		let is_SoftDeletes_param = {
-			use_files_delete: false,
-			use_SoftDeletes: false,
+			use_files_delete: false, //номер строки вставки подключения библиотеки мягкого удаления
+			use_SoftDeletes: false, // номер строчки вставки наследования методов класса мягкого удаления
 		}
+
+		let is_timestamps = {
+			index_timestamps: false, // индекс строки вставки:- public $timestamps = false;
+
+		}
+
 
 		let adds_index = 1;
 		let adds_index2 = 0;
@@ -111,6 +116,12 @@ module.exports = {
 					is_not_param.dates = true;
 					adds_index2 ++;
 				}
+			},
+			_timestamps: {
+				reg: new RegExp("publi$timestamps = (?:false|true);", 'i'),
+				f(index) {
+
+				}
 			}
 		};
 		let strings_names = [];
@@ -153,7 +164,7 @@ module.exports = {
 				adds_index ++;
 			}
 		} else {
-			// добавляем подключаемую библиотеку SoftDeletes в пространство имен
+			// удаляем подключаемую библиотеку SoftDeletes в пространство имен
 			if(is_SoftDeletes_param.use_files_delete) {
 				strings_names.splice(is_SoftDeletes_param.use_files_delete, 1);
 			}
@@ -225,6 +236,7 @@ module.exports = {
 		if(typeof fields.deleted_at == 'undefined' || fields.deleted_at !== false) {
 			fields_dates.push('deleted_at');
 		}
+
 		forIn(fields, (field, name) => {
 			if(field.type == 'timestamp') {
 				fields_dates.push(name);
@@ -243,14 +255,22 @@ module.exports = {
 			}
 		});
 
-		if(indexses.table > 0) {
+		// строчка вставки мени таблицы
+		if(indexses.table > 0
+			// при условии что в параметрах таблицы не сказанно игнорировать имя таблицы
+			&& (typeof fields._option.model.table == 'undefined'|| fields._option.model.table != false))
+		{
 			let re_table = new RegExp('table([^;]*);', 'g');
 			strings_names[indexses.table].str = strings_names[indexses.table].str.replace(re_table, (x, data) => {
 				return 'table = \'' + table_name + '\';';
 			});
 		}
 
-		if(indexses.fillable > 0) {
+		// массив переменных
+		if(indexses.fillable > 0
+			// при условии что в параметрах таблицы не сказанно игнорировать список полей таблицы
+			&& (typeof fields._option.model.fillable == 'undefined'|| fields._option.model.fillable != false))
+		{
 			let re_fillable = new RegExp('fillable([^;]*);', 'g');
 			strings_names[indexses.fillable].str = strings_names[indexses.fillable].str.replace(re_fillable, (x, data) => {
 				let str_rep = 'fillable = [';
@@ -264,12 +284,16 @@ module.exports = {
 				});
 
 				str_rep += '];';
-				// console.log('str =>', str_rep, '<|');
+				// console.log('str =>', str_rep, '<||>');
 				return str_rep;
 			});
 		}
 
-		if(indexses.dates > 0) {
+		// массив переменных даты
+		if(indexses.dates > 0
+			// при условии что в параметрах таблицы не сказанно игнорировать список полей таблицы дат
+			&& (typeof fields._option.model.dates == 'undefined'|| fields._option.model.dates != false))
+		{
 			let re_dates = new RegExp('dates([^;]*);', 'g');
 			strings_names[indexses.dates].str = strings_names[indexses.dates].str.replace(re_dates, (x, data) => {
 				let str_rep = 'dates = [';
@@ -299,6 +323,14 @@ module.exports = {
 			res += str.str;
 		});
 
+
+		if(fields.created_at == false && fields.updated_at == false) {
+
+			fields_dates.push('created_at');
+		}
+		if(typeof fields.updated_at == 'undefined' || fields.updated_at !== false) {
+			fields_dates.push('updated_at');
+		}
 
 		// console.log('res =>', res);
 

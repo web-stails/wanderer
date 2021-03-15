@@ -15,6 +15,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 			{name: ['varchar'], val: 'string', type: 's', pr: [{name: 'constraint', default: 255}]},
 			{name: ['string'], val: 'string', type: 's', pr: [{name: 'constraint', default: 255}]},
 			{name: ['longtext'], val: 'text', type: 's', pr: ['longtext'] },
+			{name: ['long_text'], val: 'text', type: 's', pr: ['longtext'] },
+			{name: ['longText'], val: 'text', type: 's', pr: ['longtext'] },
 			{name: ['float'], val: 'float', type: 'n', pr: [{name: 'precision', default: 8}, {name: 'scale', default: 2}]},
 			{name: ['decimal'], val: 'decimal', type: 'n', pr: [{name: 'precision', default: 8}, {name: 'scale', default: 2}]},
 			{name: ['date'], val: 'date', type: 'd'},
@@ -140,6 +142,18 @@ module.exports = new class database_structuring extends require('../models/app_m
 			...tables_structure
 		};
 
+		// перенос дефолтных полей в основной список если они помечены как игнорируемые
+		await forIn(tables, async table => {
+			// console.log('table =>', table);
+			if(typeof table._option != 'undefined' && typeof table._option.default_vars != 'undefined') {
+				await forIn(table._option.default_vars, (val, field) => {
+					if(val == false) {
+						table[field] = val;
+					}
+				});
+			}
+		})
+
 		// преобразуем сокращеные параметры полей в полные
 		await convert_sf_data.convert_files(tables);
 
@@ -199,11 +213,21 @@ module.exports = new class database_structuring extends require('../models/app_m
 					column.nullable();
 				}
 
+				if(param.unsigned) {
+					column.unsigned();
+				}
+
 				if(param.modify) {
 					column.alter();
 				}
 			},
+
 			_fields_ = (name, param) => {
+
+				// исключаем опции таблицы из списка преобразования
+				if(name == '_option') {
+					return;
+				}
 
 				this.convert_types.forEach(el => {
 					if(in_array(param.type, el.name)) {
@@ -262,9 +286,6 @@ module.exports = new class database_structuring extends require('../models/app_m
 						}
 					}
 				});
-
-
-
 			}
 		;
 
@@ -399,7 +420,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 						this_list_index.push(this_index.column);
 						//соотнощение имени поля и имени индекса
 						name_list_index[this_index.column] = this_index.name
-					})
+					});
 				}
 
 				for (let name_field in fields_tables) {
