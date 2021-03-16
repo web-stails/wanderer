@@ -277,10 +277,12 @@ module.exports = {
 
 				let index = 0;
 				forIn(fields, (d, name) => {
-					if(index ++) {
-						str_rep += ', ';
+					if(name != '_option') {
+						if (index++) {
+							str_rep += ', ';
+						}
+						str_rep += "'" + name + "'";
 					}
-					str_rep += "'" + name + "'";
 				});
 
 				str_rep += '];';
