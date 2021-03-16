@@ -7,7 +7,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 		this.convert_types = [
 			{name: ['increments'], val: 'increments', type: 'n'},
 			{name: ['big_increments'], val: 'bigIncrements', type: 'n'},
-			{name: ['bool', 'boolean', 'tinyint'], val: 'boolean', type: 'n', pr: [{name: 'constraint', default: 255}]},
+			{name: ['bool', 'boolean', 'tinyint'], val: 'tinyint', type: 'n', pr: [{name: 'constraint', default: 1}]},
+			// {name: ['tinyint'], val: 'tinyint', type: 'n', pr: [{name: 'constraint', default: 1}]},
 			{name: ['int', 'integer'], val: 'integer', type: 'n'},
 			{name: ['big_int', 'bigInteger'], val: 'bigInteger', type: 'n'},
 			{name: ['text'], val: 'text', type: 'sn'},
@@ -23,7 +24,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 			{name: ['datetime'], val: 'datetime', type: 'd', pr: [{name: 'precision', default: {precision: 6}}]},
 			{name: ['time'], val: 'time', type: 't', pr: [{name: 'precision', default: 6}]},
 			{name: ['timestamp'], val: 'timestamp', type: 't'},
-			{name: ['json', 'jsonb'], val: 'jsonb', type: 't'}
+			{name: ['json', 'jsonb'], val: 'jsonb', type: 'sn'}
 		];
 
 		this.key_tables_table_id = 'id_tables_table_table';
