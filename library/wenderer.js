@@ -18,8 +18,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 			{name: ['longtext'], val: 'text', type: 's', pr: ['longtext'] },
 			{name: ['long_text'], val: 'text', type: 's', pr: ['longtext'] },
 			{name: ['longText'], val: 'text', type: 's', pr: ['longtext'] },
-			{name: ['float'], val: 'float', type: 'n', pr: [{name: 'precision', default: 8}, {name: 'scale', default: 2}]},
-			{name: ['decimal'], val: 'decimal', type: 'n', pr: [{name: 'precision', default: 8}, {name: 'scale', default: 2}]},
+			{name: ['float'], val: 'float', type: 'n', pr: [{name: 'precision', default: 12}, {name: 'scale', default: 2}]},
+			{name: ['decimal'], val: 'decimal', type: 'n', pr: [{name: 'precision', default: 12}, {name: 'scale', default: 2}]},
 			{name: ['date'], val: 'date', type: 'd'},
 			{name: ['datetime'], val: 'datetime', type: 'd', pr: [{name: 'precision', default: {precision: 6}}]},
 			{name: ['time'], val: 'time', type: 't', pr: [{name: 'precision', default: 6}]},
@@ -146,7 +146,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 		// перенос дефолтных полей в основной список если они помечены как игнорируемые
 		await forIn(tables, async table => {
 
-			// если нету опций в таблице создаем их
+			// если нет опций в таблице создаем их
 			if(typeof table._option == 'undefined') {
 				table._option = {
 					model:{
@@ -427,7 +427,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 				...fields_tables
 			}
 
-			// console.log('fields_tables =>', fields_tables);
+			// console.log(table + '=>', tables_db);
 
 			if(in_array(table, tables_db))
 			{ // таблца существует
@@ -485,7 +485,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 							})
 						})
 
-						// ищим различия (параметры данных поля в базе)
+						// ищем различия (параметры данных поля в базе)
 						if (
 							// значение по умолчанию
 							(! empty(param_field.default) && this_field[name_field].defaultValue !== param_field.default)
@@ -710,7 +710,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 				;
 
 				id = table_table.id;
-			} else { // записи нету создаем (запись об таблице в тадлице таблиц)
+			} else { // записи нет создаем (запись об таблице в тадлице таблиц)
 				id = await this.table('table_tables')
 				.then(async () => this.save({
 					name_table: table,
@@ -906,7 +906,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 			await asyncForeach(table_system, async row_table => {
 				// если такая таблица в корфигурации
 				if(! in_array(row_table.name_table, names_tables)) {
-					// если таблицы нету в конфигураторе
+					// если таблицы нет в конфигураторе
 					// удаляем запись
 					await this.db('table_tables')
 					.where({
@@ -999,7 +999,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 
 			await asyncForeach(table_table_tables, async this_table => {
 
-				// если таблицы нету в бд но есть в таблице таблиц (убаляем запись)
+				// если таблицы нет в бд но есть в таблице таблиц (удаляем запись)
 				if(this_table.type === 'system' && ! in_array(this_table.name_table, tables_db)) {
 
 					// удаляем запись
@@ -1034,9 +1034,9 @@ module.exports = new class database_structuring extends require('../models/app_m
 
 
 			if(empty(config_global_option.option.wanderer_mode) || config_global_option.option.wanderer_mode == 'all') {
-				// удаляем таблицы которых нету в таблице таблиц
+				// удаляем таблицы которых нет в таблице таблиц
 				await asyncForeach(tables_db, async name_table => {
-					// если таблицы нету в бд но есть в таблице таблиц (убаляем запись)
+					// если таблицы нет в бд но есть в таблице таблиц (удаляем запись)
 					if (! in_array(name_table, list_name_tables)) {
 
 						this.db.schema.dropTableIfExists(name_table)
@@ -1104,10 +1104,9 @@ module.exports = new class database_structuring extends require('../models/app_m
 
 								for(let p in data) {
 									if(! empty(param.data[p])) {
-
 										if(tables[table][p].type == 'timestamp') {
-											if(param.data[p][key] == 'this_time()' && data[p] != null) {
-												param.data[p][key] = Date.now();
+											if(param.data[p] == 'this_time()' && data[p] != null) {
+												param.data[p] = moment().format('YYYY-MM-DD HH:mm:ss');
 												update_to = true;
 											}
 										} else if(param.data[p] !== data[p]) {
@@ -1140,7 +1139,7 @@ module.exports = new class database_structuring extends require('../models/app_m
 									}
 
 									if(value_data == 'this_time()') {
-										ins[key] = moment().format('YYYY-MM-DD HH:mm:ss');
+										param.data[key] = moment().format('YYYY-MM-DD HH:mm:ss');
 									}
 								});
 
@@ -1151,7 +1150,8 @@ module.exports = new class database_structuring extends require('../models/app_m
 									.where({id: data.id})
 									.then(x => x)
 									.catch(e => {
-										console.error(error);
+										// console.error(e);
+										console.log(e)
 										process.exit(-1);
 									})
 									;
@@ -1167,12 +1167,11 @@ module.exports = new class database_structuring extends require('../models/app_m
 							// console.log(ins);
 							// process.exit(-1);
 
-							// есди заполняемое поле это id(связующее поле) и в качестве связки указан yне id а параметры поиска
-							let reg = /^(.+)_id_?.+/;
+
 							await asyncForeach(ins, async (value_data, key) => {
 								// console.log('f =>', value_data, key);
-								if(is_object(value_data) && reg.test(key)) {
-									let reg_p = key.match(reg);
+								if(is_object(value_data) && reg_mask_connect.test(key)) {
+									let reg_p = key.match(reg_mask_connect);
 
 									let val = await this.db(reg_p[1])
 									.where(value_data)

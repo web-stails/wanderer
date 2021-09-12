@@ -92,6 +92,14 @@ global.config_decode = string => {
 
 			let value = el[1].split('#')[0].trim();
 
+			let reg_1 = new RegExp('\s*\"([^\"]+)\"|\s*\'([^\']+)\'');
+
+			if(reg_1.test(el[1])) {
+				let res = el[1].match(reg_1);
+
+				value = ! empty(res[2]) ? res[2] : res[1];
+			}
+
 			let data_keys = el[0].split('.');
 
 			let result_keys = config;
