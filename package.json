@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "web.stails",
+  "author": "web.stails@gmail.com",
   "license": "ISC",
   "dependencies": {
     "knex": "^0.21.1",
